@@ -43,7 +43,7 @@ public:
 
 public:
     Map();
-    void generateGrid(QPainter* p , QPoint* mouse_pos);
+    void generateGrid(QPainter* p , QPoint* mouse_pos, int type);
     void addLoadingMachine(LoadingMachine m);
     void addLandMark(Landmark l);
 

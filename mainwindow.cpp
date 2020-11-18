@@ -9,6 +9,8 @@ MainWindow::MainWindow(QWidget *parent) :
 {
     ui->setupUi(this);
     ui->widget->installEventFilter(this);
+    ui->widget_2->installEventFilter(this);
+    ui->widget_3->installEventFilter(this);
 
     world_main      = new Map();
     hell            = new Map();
@@ -53,7 +55,7 @@ void MainWindow::paintEvent(QPaintEvent *event)
 bool MainWindow::eventFilter(QObject *watched, QEvent *event)
 {
 
-    static bool mid_buttton_down = 0; //中键按下
+    static bool left_buttton_down = 0; //中键按下
     static int last_mouse_x = 0; //上一次鼠标位置
     static int last_mouse_z = 0;
     if(
@@ -61,26 +63,32 @@ bool MainWindow::eventFilter(QObject *watched, QEvent *event)
              watched == ui->widget_2  ||
              watched == ui->widget_3) &&
             event->type() == QEvent::Paint  ){
-
-        widget1Paint(this->getMouseCoordinate()); //响应函数
+        if(watched == ui->widget){
+            widget1Paint(this->getMouseCoordinate());}//主世界绘图
+        if(watched == ui->widget_2){
+            widget2Paint(this->getMouseCoordinate());}//地狱绘图
+        if(watched == ui->widget_3){
+            widget3Paint(this->getMouseCoordinate());}//末地绘图
     }
 
-    if(watched == ui->widget)   //主世界地图面板
+    if(watched == ui->widget  ||
+            watched == ui->widget_2  ||
+            watched == ui->widget_3    )   //地图面板
     {
         if(event->type() == QEvent::MouseButtonPress)
         {
-            if(static_cast<QMouseEvent *>(event)->button() == Qt::MidButton) //中键按下
+            if(static_cast<QMouseEvent *>(event)->button() == Qt::LeftButton) //中键按下
             {
-                mid_buttton_down = 1;
+                left_buttton_down = 1;
                 last_mouse_x = static_cast<QMouseEvent *>(event)->x();
                 last_mouse_z = static_cast<QMouseEvent *>(event)->y();
             }
         }
         if(event->type() == QEvent::MouseButtonRelease)
         {
-            if(static_cast<QMouseEvent *>(event)->button() == Qt::MidButton) //中键释放
+            if(static_cast<QMouseEvent *>(event)->button() == Qt::LeftButton) //中键释放
             {
-                mid_buttton_down = 0;
+                left_buttton_down = 0;
             }
         }
 
@@ -89,7 +97,7 @@ bool MainWindow::eventFilter(QObject *watched, QEvent *event)
             int the_x = static_cast<QMouseEvent *>(event)->x();
             int the_z = static_cast<QMouseEvent *>(event)->y();
             setMouseCoordinate( the_x, the_z );
-            if(mid_buttton_down)
+            if(left_buttton_down)
             {
                 world->offset_x += (last_mouse_x - the_x) / (10 * world->scale);
                 world->offset_z += (last_mouse_z - the_z) / (10 * world->scale);
@@ -106,7 +114,7 @@ bool MainWindow::eventFilter(QObject *watched, QEvent *event)
         {
             int deltaw = static_cast<QWheelEvent *>(event)->delta();
 
-            if(deltaw > 0){this->world->scale *= 1.1;}
+            if(deltaw > 0){this->world->scale *= 1.1; if(this->world->scale > 40) this->world->scale = 40; }
             else {this->world->scale /= 1.1; if(this->world->scale < 0.01) this->world->scale = 0.01;}
             this->update();
         }
@@ -117,7 +125,7 @@ bool MainWindow::eventFilter(QObject *watched, QEvent *event)
 }
 
 //主世界地图绘制
-void MainWindow::widget1Paint(QPoint* mouse_pos)
+void MainWindow::widget1Paint(QPoint *mouse_pos)
 {
     QPainter painter(ui->widget);
     QPoint* pos = getMouseCoordinate();
@@ -127,8 +135,64 @@ void MainWindow::widget1Paint(QPoint* mouse_pos)
     painter.setFont(QFont("simhei",10,QFont::Bold , true));
     painter.setPen(Qt::black);
 
-    world->generateGrid(&painter , mouse_pos);
+    world->generateGrid(&painter , mouse_pos,0);
     painter.setPen(QColor(50,150,50));
+    painter.drawText(QPoint(550,30),"X:");
+    QPointF mpos = Transformer::screenToWorld(world->offset_x , world->offset_z, coordinate_x , coordinate_z,world->scale);
+
+    painter.drawText(QPoint(580,30),QString::number(int(mpos.rx()),10));
+    painter.drawText(QPoint(550,50),"Z:");
+    painter.drawText(QPoint(580,50),QString::number(int(mpos.ry()),10));
+
+    //painter.drawText(QPoint(550,70),"Chunk:");
+    painter.drawText(QPoint(510,70),QString("Chunk: %1 , %2").arg(
+                         (mpos.rx() > 0)?(int(mpos.rx()) / 16):(int(mpos.rx()) / 16 - 1)
+                         ).arg(
+                         (mpos.ry() > 0)?(int(mpos.ry()) / 16):(int(mpos.ry()) / 16 - 1))
+                     );
+}
+
+//地狱地图绘制
+void MainWindow::widget2Paint(QPoint *mouse_pos)
+{
+    QPainter painter(ui->widget_2);
+    QPoint* pos = getMouseCoordinate();
+
+
+
+    painter.setFont(QFont("simhei",10,QFont::Bold , true));
+    painter.setPen(Qt::black);
+
+    world->generateGrid(&painter , mouse_pos, 1);
+    painter.setPen(QColor(0,0,0));
+    painter.drawText(QPoint(550,30),"X:");
+    QPointF mpos = Transformer::screenToWorld(world->offset_x , world->offset_z, coordinate_x , coordinate_z,world->scale);
+
+    painter.drawText(QPoint(580,30),QString::number(int(mpos.rx()),10));
+    painter.drawText(QPoint(550,50),"Z:");
+    painter.drawText(QPoint(580,50),QString::number(int(mpos.ry()),10));
+
+    //painter.drawText(QPoint(550,70),"Chunk:");
+    painter.drawText(QPoint(510,70),QString("Chunk: %1 , %2").arg(
+                         (mpos.rx() > 0)?(int(mpos.rx()) / 16):(int(mpos.rx()) / 16 - 1)
+                         ).arg(
+                         (mpos.ry() > 0)?(int(mpos.ry()) / 16):(int(mpos.ry()) / 16 - 1))
+                     );
+}
+
+//地狱地图绘制
+void MainWindow::widget3Paint(QPoint *mouse_pos)
+{
+    QPainter painter(ui->widget_3);
+    QPoint* pos = getMouseCoordinate();
+
+
+
+    painter.setFont(QFont("simhei",10,QFont::Bold , true));
+    painter.setPen(Qt::black);
+
+    world->generateGrid(&painter , mouse_pos, 2);
+    painter.setPen(QColor(250,0,250));
     painter.drawText(QPoint(550,30),"X:");
     QPointF mpos = Transformer::screenToWorld(world->offset_x , world->offset_z, coordinate_x , coordinate_z,world->scale);
 
@@ -253,16 +317,48 @@ void MainWindow::on_pushButton_3_clicked() //保存log文件
     t <<"WAGPLANNER\n";
     t <<"loadmachine\n";
 
-    for(int i = 0 ; i < world->loadmachine_list.length() ; i++)
+    for(int i = 0 ; i < world_main->loadmachine_list.length() ; i++)
     {
-        LoadingMachine m = world->loadmachine_list[i];
+        LoadingMachine m = world_main->loadmachine_list[i];
         t <<m.id<<"#"<<m.co_x<<"#"<<m.co_z<<"#"<<m.block_x<<"#"<<m.block_z<<"#"<<m.weak_load_range<<"#"<<m.strong_load_range<<"\n";
     }
 
     t <<"landmark\n";
-    for(int i = 0 ; i < world->landmark_list.length() ; i++)
+    for(int i = 0 ; i < world_main->landmark_list.length() ; i++)
     {
-        Landmark l = world->landmark_list[i];
+        Landmark l = world_main->landmark_list[i];
+        t <<l.id<<"#"<<l.co_x<<"#"<<l.co_z<<"#";
+        t<<l.name<<"\n";
+    }
+
+    t <<"loadmachine\n";
+
+    for(int i = 0 ; i < hell->loadmachine_list.length() ; i++)
+    {
+        LoadingMachine m = hell->loadmachine_list[i];
+        t <<m.id<<"#"<<m.co_x<<"#"<<m.co_z<<"#"<<m.block_x<<"#"<<m.block_z<<"#"<<m.weak_load_range<<"#"<<m.strong_load_range<<"\n";
+    }
+
+    t <<"landmark\n";
+    for(int i = 0 ; i < hell->landmark_list.length() ; i++)
+    {
+        Landmark l = hell->landmark_list[i];
+        t <<l.id<<"#"<<l.co_x<<"#"<<l.co_z<<"#";
+        t<<l.name<<"\n";
+    }
+
+    t <<"loadmachine\n";
+
+    for(int i = 0 ; i < the_end->loadmachine_list.length() ; i++)
+    {
+        LoadingMachine m = the_end->loadmachine_list[i];
+        t <<m.id<<"#"<<m.co_x<<"#"<<m.co_z<<"#"<<m.block_x<<"#"<<m.block_z<<"#"<<m.weak_load_range<<"#"<<m.strong_load_range<<"\n";
+    }
+
+    t <<"landmark\n";
+    for(int i = 0 ; i < the_end->landmark_list.length() ; i++)
+    {
+        Landmark l = the_end->landmark_list[i];
         t <<l.id<<"#"<<l.co_x<<"#"<<l.co_z<<"#";
         t<<l.name<<"\n";
     }
@@ -294,7 +390,7 @@ void MainWindow::on_pushButton_4_clicked() //读取log文件
     else {
 
         line = f.readLine();
-        world->clear();
+        world_main->clear();
         for(line = f.readLine(); line.compare(QString("landmark\n")) != 0 ; line = f.readLine())
         {
             qDebug()<<line;
@@ -305,11 +401,61 @@ void MainWindow::on_pushButton_4_clicked() //读取log文件
             int bz = line.split('#')[4].toInt();
             int wr = line.split('#')[5].toInt();
             int sr = line.split('#')[6].toInt();
-            world->addLoadingMachine(LoadingMachine(id,cx,cz,wr,sr));
+            world_main->addLoadingMachine(LoadingMachine(id,cx,cz,wr,sr));
 
         }
 
-        for(line = f.readLine(); line.compare(QString("end")) != 0 ; line = f.readLine())
+        for(line = f.readLine(); line.compare(QString("end")) != 0 && line.compare(QString("loadmachine\n")) != 0; line = f.readLine())
+        {
+            qDebug()<<line;
+            int id = line.split('#')[0].toInt();
+            int cx = line.split('#')[1].toInt();
+            int cz = line.split('#')[2].toInt();
+            QString name = code->toUnicode(line.split('#')[3].toUtf8());
+            world_main->addLandMark(Landmark(id,cx,cz,name));
+        }
+
+        hell->clear();
+        for(line = f.readLine(); line.compare(QString("landmark\n")) != 0 ; line = f.readLine())
+        {
+            qDebug()<<line;
+            int id = line.split('#')[0].toInt();
+            int cx = line.split('#')[1].toInt();
+            int cz = line.split('#')[2].toInt();
+            int bx = line.split('#')[3].toInt();
+            int bz = line.split('#')[4].toInt();
+            int wr = line.split('#')[5].toInt();
+            int sr = line.split('#')[6].toInt();
+            hell->addLoadingMachine(LoadingMachine(id,cx,cz,wr,sr));
+
+        }
+
+        for(line = f.readLine(); line.compare(QString("end")) != 0 && line.compare(QString("loadmachine\n")) != 0; line = f.readLine())
+        {
+
+            int id = line.split('#')[0].toInt();
+            int cx = line.split('#')[1].toInt();
+            int cz = line.split('#')[2].toInt();
+            QString name = code->toUnicode(line.split('#')[3].toUtf8());
+            hell->addLandMark(Landmark(id,cx,cz,name));
+        }
+
+        the_end->clear();
+        for(line = f.readLine(); line.compare(QString("landmark\n")) != 0 ; line = f.readLine())
+        {
+            qDebug()<<line;
+            int id = line.split('#')[0].toInt();
+            int cx = line.split('#')[1].toInt();
+            int cz = line.split('#')[2].toInt();
+            int bx = line.split('#')[3].toInt();
+            int bz = line.split('#')[4].toInt();
+            int wr = line.split('#')[5].toInt();
+            int sr = line.split('#')[6].toInt();
+            the_end->addLoadingMachine(LoadingMachine(id,cx,cz,wr,sr));
+
+        }
+
+        for(line = f.readLine(); line.compare(QString("end")) != 0 && line.compare(QString("loadmachine\n")) != 0; line = f.readLine())
         {
 
             int id = line.split('#')[0].toInt();
@@ -317,10 +463,25 @@ void MainWindow::on_pushButton_4_clicked() //读取log文件
             int cz = line.split('#')[2].toInt();
             QString name = code->toUnicode(line.split('#')[3].toUtf8());
             qDebug()<<name;
-            world->addLandMark(Landmark(id,cx,cz,name));
+            the_end->addLandMark(Landmark(id,cx,cz,name));
         }
+
+        world = world_main;
         updateListView(world);
         update();
 
     }
+}
+
+void MainWindow::on_tabWidget_currentChanged(int index)
+{
+    selected_world = index + 1;
+    switch(index)
+    {
+    case 0:{world = world_main;break;}
+    case 1:{world = hell;break;}
+    case 2:{world = the_end;break;}
+    }
+    updateListView(world);
+    update();
 }

@@ -24,7 +24,7 @@
      </rect>
     </property>
     <property name="currentIndex">
-     <number>0</number>
+     <number>2</number>
     </property>
     <widget class="QWidget" name="tab">
      <attribute name="title">
@@ -63,6 +63,9 @@
       <property name="cursor">
        <cursorShape>CrossCursor</cursorShape>
       </property>
+      <property name="mouseTracking">
+       <bool>true</bool>
+      </property>
      </widget>
     </widget>
     <widget class="QWidget" name="tab_3">
@@ -80,6 +83,9 @@
       </property>
       <property name="cursor">
        <cursorShape>CrossCursor</cursorShape>
+      </property>
+      <property name="mouseTracking">
+       <bool>true</bool>
       </property>
      </widget>
     </widget>

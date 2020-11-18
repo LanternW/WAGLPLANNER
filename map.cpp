@@ -112,7 +112,7 @@ void Map::clear()
     scale = 1;
 }
 
-void Map::generateGrid(QPainter* p ,QPoint* mouse_pos)
+void Map::generateGrid(QPainter* p ,QPoint* mouse_pos,int type)
 {
     int h0 = MainWindow::widget_h / 2;
     int l0 = MainWindow::widget_l / 2;
@@ -125,8 +125,16 @@ void Map::generateGrid(QPainter* p ,QPoint* mouse_pos)
 
 
     //绘制背景
-    p->setPen(QColor(230,250,230));
-    p->setBrush(QBrush(QColor(230,250,230), Qt::SolidPattern));
+    switch(type)
+    {
+    case 0:{p->setPen(QColor(230,250,230));
+        p->setBrush(QBrush(QColor(230,250,230), Qt::SolidPattern));break;}
+    case 1:{p->setPen(QColor(198,19,59));
+        p->setBrush(QBrush(QColor(198,19,59), Qt::SolidPattern));break;}
+    case 2:{p->setPen(QColor(248,249,159));
+        p->setBrush(QBrush(QColor(248,249,159), Qt::SolidPattern));break;}
+    }
+
     p->drawRect(QRect(0,0,MainWindow::widget_l,MainWindow::widget_h));
 
     //绘制加载器
