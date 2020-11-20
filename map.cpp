@@ -41,27 +41,28 @@ void Map::addLandMark(Landmark l)
 
 void Map::deleteLoadingMachine(int id)
 {
-    LoadingMachine m = *getMachineById(id);
+    LoadingMachine* m = getMachineById(id);
     int index = -1;
     for (int i = 0; i<loadmachine_list.length();i++) {
-        if(loadmachine_list[i].id == m.id){index = i;}
+        if(loadmachine_list[i].id == m->id){index = i;}
     }
 
     if(index != -1){loadmachine_list.removeAt(index);}
-    lmchstr.removeOne(QString("%1. ( %2 , %3 ) , w:%4 | s:%5").arg(m.id).arg(m.co_x).arg(m.co_z).arg(m.weak_load_range).arg(m.strong_load_range));
-
+    lmchstr.removeOne(QString("%1. ( %2 , %3 ) , w:%4 | s:%5").arg(m->id).arg(m->co_x).arg(m->co_z).arg(m->weak_load_range).arg(m->strong_load_range));
 }
 
 
 void Map::deleteLandMark(int id)
 {
-    Landmark l = *getMarkById(id);
+    Landmark* l = getMarkById(id);
     int index = -1;
     for (int i = 0; i<landmark_list.length();i++) {
-        if(landmark_list[i].id == l.id){index = i;}
+        if(landmark_list[i].id == l->id){index = i;}
     }
-    ldmkstr.removeOne(QString("%1. ( %2 , %3 );%4").arg(l.id).arg(l.co_x).arg(l.co_z).arg(l.name));
+    ldmkstr.removeOne(QString("%1. ( %2 , %3 );%4").arg(l->id).arg(l->co_x).arg(l->co_z).arg(l->name));
     if(index != -1){landmark_list.removeAt(index);}
+
+
 }
 
 QPoint Map::coordinateToBlock(int cox, int coz)
@@ -101,12 +102,19 @@ bool Map::isExistLandMark(int id)
 
 void Map::clear()
 {
+    loadmachine_list.clear();
+    landmark_list.clear();
+    ldmkstr.clear();
+    lmchstr.clear();
+    /*
     for (int i = 0; i < loadmachine_list.length(); i++) {
         deleteLoadingMachine(loadmachine_list[i].id);
     }
     for (int i = 0; i < landmark_list.length(); i++) {
         deleteLandMark(landmark_list[i].id);
     }
+    */
+
     offset_x = 0;
     offset_z = 0;
     scale = 1;
@@ -114,6 +122,29 @@ void Map::clear()
 
 void Map::generateGrid(QPainter* p ,QPoint* mouse_pos,int type)
 {
+    double offset_x = this->tem_ofsetx;
+    double offset_z = this->tem_ofsetz;
+
+    if(abs(offset_x - this->offset_x) < 0.1)
+    {
+        this->tem_ofsetx = this->offset_x;
+        offset_x = this->offset_x;
+    }
+    else {
+        offset_x += (this->offset_x - this->tem_ofsetx) * 0.1;
+        this->tem_ofsetx = offset_x;
+    }
+
+    if(abs(offset_z - this->offset_z) < 0.1)
+    {
+        this->tem_ofsetz = this->offset_z;
+        offset_z = this->offset_z;
+    }
+    else {
+        offset_z += (this->offset_z - this->tem_ofsetz) * 0.1;
+        this->tem_ofsetz = offset_z;
+    }
+
     int h0 = MainWindow::widget_h / 2;
     int l0 = MainWindow::widget_l / 2;
 
@@ -129,8 +160,8 @@ void Map::generateGrid(QPainter* p ,QPoint* mouse_pos,int type)
     {
     case 0:{p->setPen(QColor(230,250,230));
         p->setBrush(QBrush(QColor(230,250,230), Qt::SolidPattern));break;}
-    case 1:{p->setPen(QColor(198,19,59));
-        p->setBrush(QBrush(QColor(198,19,59), Qt::SolidPattern));break;}
+    case 1:{p->setPen(QColor(250,119,159));
+        p->setBrush(QBrush(QColor(250,119,159), Qt::SolidPattern));break;}
     case 2:{p->setPen(QColor(248,249,159));
         p->setBrush(QBrush(QColor(248,249,159), Qt::SolidPattern));break;}
     }
@@ -139,7 +170,11 @@ void Map::generateGrid(QPainter* p ,QPoint* mouse_pos,int type)
 
     //绘制加载器
     for (int i = 0 ; i < loadmachine_list.length(); i++) {
-       loadmachine_list[i].show(p,offset_x,offset_z, scale);
+       loadmachine_list[i].showWeak(p,offset_x,offset_z, scale);
+    }
+
+    for (int i = 0 ; i < loadmachine_list.length(); i++) {
+       loadmachine_list[i].showStrong(p,offset_x,offset_z, scale);
     }
 
     if(scale > 0.9)
@@ -156,7 +191,8 @@ void Map::generateGrid(QPainter* p ,QPoint* mouse_pos,int type)
             wz--;
             wx--;
             pos = Transformer::worldToScreen(offset_x,offset_z,wx,wz,scale);
-        }
+         }
+
 
         wz = int(offset_z) ; //距离屏幕中心世界坐标很近的一个整数坐标。
         wx = int(offset_x) ;
@@ -169,36 +205,42 @@ void Map::generateGrid(QPainter* p ,QPoint* mouse_pos,int type)
             wz++;
             wx++;
             pos = Transformer::worldToScreen(offset_x,offset_z,wx,wz,scale);
+
         }
     }
 
-    p->setPen(QColor(170,170,170));
-    int wz = 16 * (int(offset_z) / 16) ; //距离屏幕中心世界坐标很近的一个整数坐标。
-    int wx = 16 * (int(offset_x) / 16) ;
-    QPoint pos = Transformer::worldToScreen(offset_x,offset_z,wx,wz,scale);
-    while (pos.rx() > 0 || pos.ry() > 0) {
-        int y = pos.ry();
-        int x = pos.rx();
-        p->drawLine(QPoint(0,y) , QPoint(MainWindow::widget_l,y));
-        p->drawLine(QPoint(x,0) , QPoint(x,MainWindow::widget_h));
-        wz -= 16;
-        wx -= 16;
-        pos = Transformer::worldToScreen(offset_x,offset_z,wx,wz,scale);
-    }
+    if(scale > 0.02)
+    {
 
-    wz = 16 * (int(offset_z) / 16) ; //距离屏幕中心世界坐标很近的一个整数坐标。
-    wx = 16 * (int(offset_x) / 16) ;
-    pos = Transformer::worldToScreen(offset_x,offset_z,wx,wz,scale);
-    while (pos.rx() < MainWindow::widget_l || pos.ry() < MainWindow::widget_h) {
-        int y = pos.ry();
-        int x = pos.rx();
-        p->drawLine(QPoint(0,y) , QPoint(MainWindow::widget_l,y));
-        p->drawLine(QPoint(x,0) , QPoint(x,MainWindow::widget_h));
-        wz += 16;
-        wx += 16;
-        pos = Transformer::worldToScreen(offset_x,offset_z,wx,wz,scale);
-    }
 
+
+        p->setPen(QColor(170,170,170));
+        int wz = 16 * (int(offset_z) / 16) ; //距离屏幕中心世界坐标很近的一个整数坐标。
+        int wx = 16 * (int(offset_x) / 16) ;
+        QPoint pos = Transformer::worldToScreen(offset_x,offset_z,wx,wz,scale);
+        while (pos.rx() > 0 || pos.ry() > 0) {
+            int y = pos.ry();
+            int x = pos.rx();
+            p->drawLine(QPoint(0,y) , QPoint(MainWindow::widget_l,y));
+            p->drawLine(QPoint(x,0) , QPoint(x,MainWindow::widget_h));
+            wz -= 16;
+            wx -= 16;
+            pos = Transformer::worldToScreen(offset_x,offset_z,wx,wz,scale);
+        }
+
+        wz = 16 * (int(offset_z) / 16) ; //距离屏幕中心世界坐标很近的一个整数坐标。
+        wx = 16 * (int(offset_x) / 16) ;
+        pos = Transformer::worldToScreen(offset_x,offset_z,wx,wz,scale);
+        while (pos.rx() < MainWindow::widget_l || pos.ry() < MainWindow::widget_h) {
+            int y = pos.ry();
+            int x = pos.rx();
+            p->drawLine(QPoint(0,y) , QPoint(MainWindow::widget_l,y));
+            p->drawLine(QPoint(x,0) , QPoint(x,MainWindow::widget_h));
+            wz += 16;
+            wx += 16;
+            pos = Transformer::worldToScreen(offset_x,offset_z,wx,wz,scale);
+        }
+     }
 
     //绘制地标
     for (int i = 0 ; i < landmark_list.length(); i++) {
@@ -206,6 +248,7 @@ void Map::generateGrid(QPainter* p ,QPoint* mouse_pos,int type)
     }
 
     p->drawPixmap(MainWindow::widget_l/2 - 5 , MainWindow::widget_h/2 - 5 ,10,10 , QPixmap(":/new/prefix1/imgs/center.png") );
+
 
 
 

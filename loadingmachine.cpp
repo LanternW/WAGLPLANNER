@@ -58,9 +58,8 @@ bool LoadingMachine::isOutrange(int sx, int sy , double scale)
     return false;
 }
 
-void LoadingMachine::show(QPainter* p , double offset_x , double offset_z  , double scale)
+void LoadingMachine::showWeak(QPainter* p , double offset_x , double offset_z  , double scale)
 {
-
 
     double sx = this->block_x * 16 - int(this-> weak_load_range / 2 ) * 16 ; //左上角的世界坐标
     double sz = this->block_z * 16 - int(this-> weak_load_range / 2 ) * 16 ; //左上角的世界坐标
@@ -68,23 +67,27 @@ void LoadingMachine::show(QPainter* p , double offset_x , double offset_z  , dou
 
     int sx_ = pos.rx();
     int sz_ = pos.ry();
-    //if(!isOutrange(sx_,sz_,scale))
-    //{
-        //弱加载区块
 
-        p->setPen(QPen());
-        p->setBrush(QBrush(QColor(250,250,220), Qt::Dense3Pattern));
-        p->drawRect(QRect(sx_,sz_ , 160*scale*weak_load_range , 160*scale*weak_load_range));
+    p->setPen(QPen(QColor(250,250,220)));
+    p->setBrush(QBrush(QColor(250,250,220), Qt::Dense3Pattern));
+    p->drawRect(QRect(sx_,sz_ , 160*scale*weak_load_range , 160*scale*weak_load_range));
 
-        //强加载区块
-        sx = this->block_x * 16 - int(this-> strong_load_range / 2 ) * 16 ; //左上角的世界坐标
-        sz = this->block_z * 16 - int(this-> strong_load_range / 2 ) * 16 ; //左上角的世界坐标
-        pos = Transformer::worldToScreen(offset_x,offset_z, sx,sz,scale);
-        sx_ = pos.rx();
-        sz_ = pos.ry();
-        p->setBrush(QBrush(QColor(250,220,220), Qt::SolidPattern));
-        p->drawRect(QRect(sx_,sz_ , 160*scale*strong_load_range , 160*scale*strong_load_range));
-    //}
+}
 
+void LoadingMachine::showStrong(QPainter* p , double offset_x , double offset_z  , double scale)
+{
+
+    double sx ;
+    double sz ;
+
+    //强加载区块
+    sx = this->block_x * 16 - int(this-> strong_load_range / 2 ) * 16 ; //左上角的世界坐标
+    sz = this->block_z * 16 - int(this-> strong_load_range / 2 ) * 16 ; //左上角的世界坐标
+    QPoint pos = Transformer::worldToScreen(offset_x,offset_z, sx,sz,scale);
+    int sx_ = pos.rx();
+    int sz_ = pos.ry();
+    p->setPen(QPen(QColor(250,220,220)));
+    p->setBrush(QBrush(QColor(250,220,220), Qt::SolidPattern));
+    p->drawRect(QRect(sx_,sz_ , 160*scale*strong_load_range , 160*scale*strong_load_range));
 
 }

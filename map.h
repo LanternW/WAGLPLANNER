@@ -24,6 +24,9 @@ public:
     static QPoint coordinateToBlock(int cox , int coz);  //坐标转换为区块坐标
 public:
     double scale = 1.0 ; //比例尺, 比例尺为1时 ， 屏幕像素坐标10 = minecraft中1米
+
+    double tem_ofsetx = 0;
+    double tem_ofsetz = 0;
     double offset_x = 0 ; //偏移量x,表示屏幕正中心的世界坐标
     double offset_z = 0; //偏移量z
 

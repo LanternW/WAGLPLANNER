@@ -22,6 +22,7 @@
 #include <iostream>
 #include <stdlib.h>
 #include <cstring>
+#include <windows.h>
 
 #include "map.h"
 
@@ -60,15 +61,20 @@ private:
     Ui::MainWindow *ui;
     int coordinate_x;
     int coordinate_z;
+    int solid_cor_x;
+    int solid_cor_z;
 
 protected:
     void paintEvent(QPaintEvent *event);
     bool eventFilter(QObject *watched, QEvent *event);
-    void widget1Paint(QPoint* mouse_pos);   //主世界地图绘制
-    void widget2Paint(QPoint* mouse_pos);   //地狱地图绘制
-    void widget3Paint(QPoint* mouse_pos);   //末地地图绘制
+    void widget1Paint(QPoint* mouse_pos , bool measure , int solidzx , int solidz);   //世界地图绘制
+    void widget2Paint(QPoint* mouse_pos , bool measure , int solidzx , int solidz);   //地狱地图绘制
+    void widget3Paint(QPoint* mouse_pos , bool measure , int solidzx , int solidz);   //末地地图绘制
     void setMouseCoordinate(double x , double z); //获取鼠标在世界坐标系中的位置
-    QPoint* getMouseCoordinate(); //获取鼠标在世界坐标系中的位置\
+    int search_index = 0;
+
+    void searchLandMark(QString name);
+    QPoint* getMouseCoordinate(); //获取鼠标在世界坐标系中的位置
 
 
 
@@ -84,6 +90,11 @@ private slots:
     void on_pushButton_3_clicked();
     void on_pushButton_4_clicked();
     void on_tabWidget_currentChanged(int index);
+    void readLog(QString filename);
+    void on_listView_2_doubleClicked(const QModelIndex &index);
+    void on_lineEdit_7_textChanged(const QString &arg1);
+    void on_pushButton_8_clicked();
+    void on_listView_doubleClicked(const QModelIndex &index);
 };
 
 #endif // MAINWINDOW_H

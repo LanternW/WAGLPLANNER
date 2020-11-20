@@ -30,7 +30,8 @@ public:
     LoadingMachine(int cx,int cz, int wr, int sr);
     LoadingMachine(int id,int cx,int cz, int wr, int sr);
     bool isOutrange(int sx, int sy , double scale); //通过左上角坐标判断是否超出屏幕范围
-    void show(QPainter* p , double offset_x , double offset_z , double scale); //把自己画出来，需要获悉地图偏移量和比例尺
+    void showWeak(QPainter* p , double offset_x , double offset_z , double scale); //把自己画出来，需要获悉地图偏移量和比例尺
+    void showStrong(QPainter* p , double offset_x , double offset_z , double scale); //把自己画出来，需要获悉地图偏移量和比例尺
 };
 
 #endif // LOADINGMACHINE_H
